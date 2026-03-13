@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ester Homologous Series</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+    <style>
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .selected {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .molecule-btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+        }
+
+        .molecule-btn:hover:not(.selected) {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+
+<body class="bg-black overflow-hidden font-sans text-gray-300 w-screen h-screen relative">
+
+    <!-- Menu Toggle Button -->
+    <button onclick="toggleMenu()"
+        class="absolute top-4 left-4 z-50 p-2 bg-white/10 hover:bg-white/20 text-white rounded-lg backdrop-blur-md border border-white/20 shadow-lg transition-colors focus:outline-none">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+    </button>
+
+    <!-- Retractable Sidebar -->
+    <aside id="menu-panel"
+        class="no-scrollbar absolute top-0 left-0 h-full w-80 bg-white/10 backdrop-blur-xl border-r border-white/20 flex flex-col z-40 transform transition-transform duration-300 translate-x-0 pt-20 shadow-[0_8px_32px_0_rgba(0,0,0,0.3)]">
+        <nav id="menu" class="flex-1 p-4 space-y-8 pb-6 overflow-y-auto no-scrollbar">
+            <!-- Menu populated by JS -->
+        </nav>
+
+    </aside>
+
+    <!-- 3D Viewer Area -->
+    <div class="absolute inset-0 z-10">
+        <div id="loading"
+            class="absolute inset-0 flex items-center justify-center bg-black/80 z-20 text-white flex-col hidden backdrop-blur-sm">
+            <svg class="animate-spin h-8 w-8 mb-4 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+            </svg>
+            <span class="text-sm tracking-widest uppercase text-gray-400">Loading...</span>
+        </div>
+        <div id="viewer-container" class="w-full h-full relative"></div>
+    </div>
+
+    <!-- Molecule Info (Top Right) -->
+    <div class="absolute top-6 right-6 text-right z-30 pointer-events-none select-none">
+        <h2 id="ester-name" class="text-2xl font-light text-white tracking-wide">Molecule Name</h2>
+        <p id="ester-category" class="text-xs text-gray-500 mt-1 uppercase tracking-widest">Category</p>
+    </div>
+
+    <!-- Formulas Info (Bottom Right) -->
+    <div class="absolute bottom-6 right-6 z-30 pointer-events-none select-none flex flex-col items-end gap-6 text-right">
+        
+        <!-- Atom Legend -->
+        <div class="bg-white/5 p-4 rounded-xl backdrop-blur-md border border-white/10 shadow-lg flex flex-col gap-3 w-40 text-left">
+            <h3 class="text-[10px] font-bold text-white/60 uppercase tracking-widest text-center mb-1">Atom Legend</h3>
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-[#333333] border border-white/20 shadow-inner"></div>
+                    <span class="text-xs font-semibold text-white/90">Carbon</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-[#ff0d0d] border border-white/20 shadow-inner"></div>
+                    <span class="text-xs font-semibold text-white/90">Oxygen</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-white border border-gray-300 shadow-inner"></div>
+                    <span class="text-xs font-semibold text-white/90">Hydrogen</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-[#00ff00] border border-white/20 shadow-inner"></div>
+                    <span class="text-xs font-semibold text-white/90">Chlorine</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-[#8c1c1c] border border-white/20 shadow-inner"></div>
+                    <span class="text-xs font-semibold text-white/90">Bromine</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 rounded-full bg-[#1c4cbd] border border-white/20 shadow-inner"></div>
+                    <span class="text-xs font-semibold text-white/90">Nitrogen</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-end gap-4">
+            <h3 class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">Condensed Structural</h3>
+            <p id="formula-condensed" class="text-base font-mono text-gray-300"></p>
+        </div>
+        <div>
+            <h3 class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">Molecular Formula</h3>
+            <p id="formula-molecular" class="text-base font-mono text-gray-300"></p>
+        </div>
+        <div>
+            <h3 class="text-[10px] font-bold text-gray-600 uppercase tracking-widest mb-1">Empirical Formula</h3>
+            <p id="formula-empirical" class="text-base font-mono text-gray-300"></p>
+        </div>
+        </div>
+    </div>
+
+    <!-- Controls Hint (Bottom Center) -->
+    <div
+        class="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-gray-600 text-[10px] uppercase tracking-widest z-30 pointer-events-none select-none">
+        Left Click: Rotate &bull; Right Click/Two Fingers: Pan &bull; Scroll: Zoom
+    </div>
+
+    <script>
+        const seriesData = [
+            {
+                category: "Methyl Esters",
+                members: [
+                    { name: "Methyl methanoate", cid: 7865, mol: "C2H4O2", emp: "CH2O", cond: "HCOOCH3" },
+                    { name: "Methyl ethanoate", cid: 8040, mol: "C3H6O2", emp: "C3H6O2", cond: "CH3COOCH3" },
+                    { name: "Methyl propanoate", cid: 8048, mol: "C4H8O2", emp: "C2H4O", cond: "CH3CH2COOCH3" },
+                    { name: "Methyl butanoate", cid: 8060, mol: "C5H10O2", emp: "C5H10O2", cond: "CH3(CH2)2COOCH3" }
+                ]
+            },
+            {
+                category: "Ethyl Esters",
+                members: [
+                    { name: "Ethyl methanoate", cid: 8025, mol: "C3H6O2", emp: "C3H6O2", cond: "HCOOCH2CH3" },
+                    { name: "Ethyl ethanoate", cid: 8857, mol: "C4H8O2", emp: "C2H4O", cond: "CH3COOCH2CH3" },
+                    { name: "Ethyl propanoate", cid: 8049, mol: "C5H10O2", emp: "C5H10O2", cond: "CH3CH2COOCH2CH3" },
+                    { name: "Ethyl butanoate", cid: 7762, mol: "C6H12O2", emp: "C3H6O", cond: "CH3(CH2)2COOCH2CH3" }
+                ]
+            },
+            {
+                category: "Propyl Esters",
+                members: [
+                    { name: "Propyl methanoate", cid: 11469, mol: "C4H8O2", emp: "C2H4O", cond: "HCOO(CH2)2CH3" },
+                    { name: "Propyl ethanoate", cid: 7997, mol: "C5H10O2", emp: "C5H10O2", cond: "CH3COO(CH2)2CH3" },
+                    { name: "Propyl propanoate", cid: 7923, mol: "C6H12O2", emp: "C3H6O", cond: "CH3CH2COO(CH2)2CH3" },
+                    { name: "Propyl butanoate", cid: 7803, mol: "C7H14O2", emp: "C7H14O2", cond: "CH3(CH2)2COO(CH2)2CH3" }
+                ]
+            },
+            {
+                category: "Butyl Esters",
+                members: [
+                    { name: "Butyl methanoate", cid: 8133, mol: "C5H10O2", emp: "C5H10O2", cond: "HCOO(CH2)3CH3" },
+                    { name: "Butyl ethanoate", cid: 31272, mol: "C6H12O2", emp: "C3H6O", cond: "CH3COO(CH2)3CH3" },
+                    { name: "Butyl propanoate", cid: 7849, mol: "C7H14O2", emp: "C7H14O2", cond: "CH3CH2COO(CH2)3CH3" },
+                    { name: "Butyl butanoate", cid: 7780, mol: "C8H16O2", emp: "C4H8O", cond: "CH3(CH2)2COO(CH2)3CH3" }
+                ]
+            }
+        ];
+
+        let viewer = null;
+        let currentBtn = null;
+        let isMenuOpen = true;
+
+        function toggleMenu() {
+            const menuPanel = document.getElementById('menu-panel');
+            isMenuOpen = !isMenuOpen;
+            if (isMenuOpen) {
+                menuPanel.classList.remove('-translate-x-full');
+            } else {
+                menuPanel.classList.add('-translate-x-full');
+            }
+        }
+
+        function formatSubscripts(str) {
+            return str.replace(/(\d+)/g, '<sub class="text-[0.7em]">$1</sub>');
+        }
+
+        function loadMolecule(ester, categoryName, btnElement) {
+            if (currentBtn) currentBtn.classList.remove('selected');
+            currentBtn = btnElement;
+            currentBtn.classList.add('selected');
+
+            document.getElementById('ester-name').textContent = ester.name;
+            document.getElementById('ester-category').textContent = categoryName;
+
+            document.getElementById('formula-molecular').innerHTML = formatSubscripts(ester.mol);
+            document.getElementById('formula-empirical').innerHTML = formatSubscripts(ester.emp);
+            document.getElementById('formula-condensed').innerHTML = formatSubscripts(ester.cond);
+
+            if (!viewer) {
+                viewer = $3Dmol.createViewer("viewer-container", { backgroundColor: "black" });
+            }
+
+            viewer.clear();
+            document.getElementById('loading').classList.remove('hidden');
+
+            $3Dmol.download("cid:" + ester.cid, viewer, {}, function () {
+                viewer.setStyle({}, {
+                    stick: { radius: 0.15 },
+                    sphere: { scale: 0.3 }
+                });
+
+                // Make Carbon atoms darker
+                viewer.setStyle({elem: 'C'}, {
+                    stick: { radius: 0.15, color: '#333333' },
+                    sphere: { scale: 0.3, color: '#333333' }
+                });
+
+                viewer.zoomTo();
+                viewer.render();
+                document.getElementById('loading').classList.add('hidden');
+            });
+
+            // Auto-close menu on mobile after selection
+            if (window.innerWidth < 768 && isMenuOpen) {
+                toggleMenu();
+            }
+        }
+
+        function initializeMenu() {
+            const menuContainer = document.getElementById('menu');
+            let isFirst = true;
+
+            seriesData.forEach(series => {
+                const section = document.createElement('div');
+
+                const header = document.createElement('h3');
+                header.className = 'text-xs font-bold text-white/60 uppercase tracking-widest mb-3 px-4';
+                header.textContent = series.category;
+                section.appendChild(header);
+
+                const list = document.createElement('ul');
+                list.className = 'space-y-2 px-2';
+
+                series.members.forEach(member => {
+                    const li = document.createElement('li');
+                    const btn = document.createElement('button');
+                    btn.className = 'molecule-btn w-full text-left px-4 py-3 rounded-xl focus:outline-none flex justify-between items-center gap-3';
+
+                    btn.innerHTML = `
+                        <span class="truncate text-white font-semibold text-[15px] drop-shadow-sm">${member.name}</span>
+                        <span class="text-xs font-mono text-white/90 font-bold bg-white/10 px-2 py-1 rounded-md border border-white/20 shadow-inner">${formatSubscripts(member.mol)}</span>
+                    `;
+
+                    btn.onclick = () => loadMolecule(member, series.category, btn);
+
+                    li.appendChild(btn);
+                    list.appendChild(li);
+
+                    if (isFirst) {
+                        setTimeout(() => loadMolecule(member, series.category, btn), 100);
+                        isFirst = false;
+                    }
+                });
+
+                section.appendChild(list);
+                menuContainer.appendChild(section);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeMenu);
+        window.addEventListener('resize', () => { if (viewer) viewer.resize(); });
+    </script>
+</body>
+
+</html>
